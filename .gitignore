@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+dist/
+release/
+.env*
+*.db
+*.sqlite*
+*.log
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store

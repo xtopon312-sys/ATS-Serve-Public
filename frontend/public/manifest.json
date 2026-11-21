@@ -1,0 +1,14 @@
+{
+  "name": "ATS Serve",
+  "short_name": "ATS Serve",
+  "description": "ATS Serve restaurant point of sale",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3248FF",
+  "orientation": "any",
+  "icons": [
+    { "src": "/branding/ats-serve/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/branding/ats-serve/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

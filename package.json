@@ -1,0 +1,84 @@
+{
+  "name": "flo-desktop",
+  "version": "3.8.10",
+  "description": "ATS Serve Public — local technical demonstration of restaurant management based on FloCafe",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc && node scripts/copy-runtime-assets.cjs",
+    "postinstall": "node scripts/apply-updater-patches.cjs && install-electron && electron-builder install-app-deps && npm run verify:electron",
+    "verify:electron": "node scripts/verify-electron-runtime.cjs",
+    "build:frontend": "cd frontend && npx cross-env NEXT_BUILD_MODE=desktop npm run build",
+    "lint:backend": "eslint main/ shared/",
+    "lint": "npm run lint:backend && npm --prefix frontend run lint",
+    "test:public": "node tests/run-electron-node-test.cjs tests/ats-br-first-run.test.ts && node tests/run-electron-node-test.cjs tests/ats-br-pix-commercial.test.ts && node tests/run-electron-node-test.cjs tests/payment-methods-split-checks.test.ts && node tests/run-electron-node-test.cjs tests/kds-integration.test.ts",
+    "test:url-allowlist": "ts-node --transpile-only -P tests/tsconfig.json tests/url-allowlist.test.ts",
+    "demo": "node scripts/public-demo.cjs"
+  },
+  "author": {
+    "name": "AuroraTechno Solution"
+  },
+  "license": "MIT",
+  "overrides": {
+    "proxy-addr": "2.0.8",
+    "sharp": "0.35.5",
+    "node-abi": "^4.33.0",
+    "brace-expansion": "^5.0.12",
+    "js-yaml@^4": "^4.3.2",
+    "minimatch@3.1.5": {
+      "brace-expansion": "^1.1.21"
+    }
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "3.1146.0",
+    "@electron/rebuild": "^4.2.0",
+    "@formatjs/icu-messageformat-parser": "^3.5.17",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/bonjour": "^3.5.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.5.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/supertest": "^7.2.1",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^8.70.0",
+    "@typescript-eslint/parser": "^8.63.0",
+    "ajv": "6.15.0",
+    "cross-env": "10.1.0",
+    "electron": "^43.5.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.10.0",
+    "js-yaml": "^5.4.1",
+    "supertest": "^7.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@point-of-sale/codepage-encoder": "3.0.2",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "bonjour-service": "^1.4.4",
+    "cors": "^2.8.5",
+    "decimal.js": "^10.6.0",
+    "electron-log": "^5.4.4",
+    "electron-updater": "6.8.10",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "@googleapis/drive": "^25.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "libphonenumber-js": "^1.13.13",
+    "qrcode": "^1.5.3",
+    "sharp": "0.35.5",
+    "ws": "^8.21.2"
+  },
+  "allowScripts": {
+    "electron-winstaller@5.4.0": true,
+    "protobufjs@7.6.5": true,
+    "@whiskeysockets/baileys@7.0.0-rc14": true
+  }
+}

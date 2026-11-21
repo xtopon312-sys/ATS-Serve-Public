@@ -1,0 +1,144 @@
+{
+  "id": "ATS-RC2B3-PATCH-01",
+  "schemaVersion": 1,
+  "versions": {
+    "electron-updater": "6.8.10",
+    "builder-util-runtime": "9.7.0"
+  },
+  "files": [
+    {
+      "file": "builder-util-runtime/out/retry.js",
+      "originalSha256": "f89a0e871d04334725d54112c101475b423ea93ae4db2878b6cc2404791b5b40",
+      "patchedSha256": "efa55383648e9a2c5b9856b7cd2ad45334d4a42aa81208c8444b6869074f3f8c",
+      "changes": [
+        {
+          "before": "    try {\n        return await task();",
+          "after": "    const checkCancellation = () => {\n        if (cancellationToken.cancelled) throw new CancellationToken_1.CancellationError();\n    };\n    checkCancellation();\n    try {\n        const result = await task();\n        checkCancellation();\n        return result;"
+        },
+        {
+          "before": "    catch (error) {\n        if (",
+          "after": "    catch (error) {\n        checkCancellation();\n        if ("
+        },
+        {
+          "before": "            await new Promise(resolve => setTimeout(resolve, interval + backoff * attempt));",
+          "after": "            checkCancellation();\n            await new Promise((resolve, reject) => {\n                let timer;\n                const cancel = () => {\n                    clearTimeout(timer);\n                    cancellationToken.removeListener(\"cancel\", cancel);\n                    reject(new CancellationToken_1.CancellationError());\n                };\n                cancellationToken.onCancel(cancel);\n                if (!cancellationToken.cancelled) timer = setTimeout(() => {\n                    cancellationToken.removeListener(\"cancel\", cancel);\n                    resolve();\n                }, interval + backoff * attempt);\n            });"
+        }
+      ]
+    },
+    {
+      "file": "electron-updater/out/DownloadedUpdateHelper.js",
+      "originalSha256": "81d816fdfddf4711218f78c7625e22122b2159ec7c83209613dfb9e71a552e4d",
+      "patchedSha256": "4b27a81ea4b40bd6cb3cc5943dc547d6c0c7b1a700f58a6c195e4397475d74b3",
+      "changes": [
+        {
+          "before": "const path = require(\"path\");",
+          "after": "const path = require(\"path\");\nconst { pipeline } = require(\"stream/promises\");\nconst { CancellationError } = require(\"builder-util-runtime\");\nconst checkCancellation = token => { if (token?.cancelled) throw new CancellationError(); };"
+        },
+        {
+          "before": "async validateDownloadedPath(updateFile, updateInfo, fileInfo, logger) {",
+          "after": "async validateDownloadedPath(updateFile, updateInfo, fileInfo, logger, cancellationToken) {\n        checkCancellation(cancellationToken);"
+        },
+        {
+          "before": "                return updateFile;",
+          "after": "                checkCancellation(cancellationToken);\n                return updateFile;"
+        },
+        {
+          "before": "await this.getValidCachedUpdateFile(fileInfo, logger);",
+          "after": "await this.getValidCachedUpdateFile(fileInfo, logger, cancellationToken);\n        checkCancellation(cancellationToken);"
+        },
+        {
+          "before": "    async setDownloadedFile(downloadedFile, packageFile, versionInfo, fileInfo, updateFileName, isSaveCache) {\n        this._file = downloadedFile;\n        this._packageFile = packageFile;\n        this.versionInfo = versionInfo;\n        this.fileInfo = fileInfo;\n        this._downloadedFileInfo = {",
+          "after": "    async setDownloadedFile(downloadedFile, packageFile, versionInfo, fileInfo, updateFileName, isSaveCache, cancellationToken) {\n        checkCancellation(cancellationToken);\n        const downloadedFileInfo = {"
+        },
+        {
+          "before": "            await (0, fs_extra_1.outputJson)(this.getUpdateInfoFile(), this._downloadedFileInfo);\n        }\n    }",
+          "after": "            await (0, fs_extra_1.outputJson)(this.getUpdateInfoFile(), downloadedFileInfo);\n        }\n        checkCancellation(cancellationToken);\n        this._file = downloadedFile;\n        this._packageFile = packageFile;\n        this.versionInfo = versionInfo;\n        this.fileInfo = fileInfo;\n        this._downloadedFileInfo = downloadedFileInfo;\n    }"
+        },
+        {
+          "before": "async getValidCachedUpdateFile(fileInfo, logger) {",
+          "after": "async getValidCachedUpdateFile(fileInfo, logger, cancellationToken) {\n        checkCancellation(cancellationToken);"
+        },
+        {
+          "before": "await hashFile(updateFile);",
+          "after": "await hashFile(updateFile, cancellationToken);\n        checkCancellation(cancellationToken);"
+        },
+        {
+          "before": "function hashFile(file, algorithm = \"sha512\", encoding = \"base64\", options) {\n    return new Promise((resolve, reject) => {\n        const hash = (0, crypto_1.createHash)(algorithm);\n        hash.on(\"error\", reject).setEncoding(encoding);\n        (0, fs_1.createReadStream)(file, { ...options, highWaterMark: 1024 * 1024 /* better to use more memory but hash faster */ })\n            .on(\"error\", reject)\n            .on(\"end\", () => {\n            hash.end();\n            resolve(hash.read());\n        })\n            .pipe(hash, { end: false });\n    });\n}",
+          "after": "async function hashFile(file, cancellationToken) {\n    checkCancellation(cancellationToken);\n    const controller = new AbortController();\n    const cancel = () => controller.abort(new CancellationError());\n    const input = (0, fs_1.createReadStream)(file, { highWaterMark: 1024 * 1024 });\n    const hash = (0, crypto_1.createHash)(\"sha512\").setEncoding(\"base64\");\n    cancellationToken?.onCancel(cancel);\n    try {\n        const digest = await pipeline(input, hash, async source => {\n            let result = \"\";\n            for await (const chunk of source) result += chunk;\n            return result;\n        }, { signal: controller.signal });\n        checkCancellation(cancellationToken);\n        return digest;\n    } catch (error) {\n        checkCancellation(cancellationToken);\n        throw error;\n    } finally {\n        cancellationToken?.removeListener(\"cancel\", cancel);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "file": "electron-updater/out/DownloadedUpdateHelper.d.ts",
+      "originalSha256": "23d6acead4dd29a74539c3e32f8cf84e0fe45a2419929a409a8c8b0a2694ea7d",
+      "patchedSha256": "e44fac061252904ec2f1005d340eb5a436679197e3f3d3fbbdb657221fe14529",
+      "changes": [
+        {
+          "before": "import { UpdateInfo }",
+          "after": "import { CancellationToken, UpdateInfo }"
+        },
+        {
+          "before": "logger: Logger): Promise<string | null>;",
+          "after": "logger: Logger, cancellationToken?: CancellationToken): Promise<string | null>;"
+        },
+        {
+          "before": "isSaveCache: boolean): Promise<void>;",
+          "after": "isSaveCache: boolean, cancellationToken?: CancellationToken): Promise<void>;"
+        }
+      ]
+    },
+    {
+      "file": "electron-updater/out/AppUpdater.js",
+      "originalSha256": "8a744ad4b0921f1a6c2804037eda31ddec5486cf8b797a37fa9ba7089c07a923",
+      "patchedSha256": "f5ec85c1ebe899c13b870b7520f18ea2f510c86cc65f30fe8cccd6ed4924018d",
+      "changes": [
+        {
+          "before": "        const done = async (isSaveCache) => {",
+          "after": "        const done = async (isSaveCache) => {\n            if (downloadOptions.cancellationToken.cancelled) throw new builder_util_runtime_1.CancellationError();"
+        },
+        {
+          "before": "fileInfo, updateFileName, isSaveCache);",
+          "after": "fileInfo, updateFileName, isSaveCache, downloadOptions.cancellationToken);\n            if (downloadOptions.cancellationToken.cancelled) throw new builder_util_runtime_1.CancellationError();"
+        },
+        {
+          "before": "validateDownloadedPath(updateFile, updateInfo, fileInfo, log);",
+          "after": "validateDownloadedPath(updateFile, updateInfo, fileInfo, log, downloadOptions.cancellationToken);"
+        },
+        {
+          "before": "                retries: 60,",
+          "after": "                cancellationToken: downloadOptions.cancellationToken,\n                retries: 60,"
+        },
+        {
+          "before": "const fs_extra_1 = require(\"fs-extra\");",
+          "after": "const fs_extra_1 = require(\"fs-extra\");\nconst fs_native_1 = require(\"fs/promises\");"
+        },
+        {
+          "before": "retry)(() => (0, fs_extra_1.rename)(tempUpdateFile, updateFile), {",
+          "after": "retry)(() => fs_native_1.rename(tempUpdateFile, updateFile), {"
+        }
+      ]
+    }
+  ],
+  "guards": [
+    {
+      "file": "electron-updater/out/NsisUpdater.js",
+      "sha256": "31f36b4ef5cadd35a93df91d9454aa70044e41c0e6b4c799783dca4302cd03b6"
+    },
+    {
+      "file": "electron-updater/out/electronHttpExecutor.js",
+      "sha256": "907bc7f2c71c1f964fe83f71337a520073e753f3f35ea00076f5676aebaa6404"
+    },
+    {
+      "file": "builder-util-runtime/out/httpExecutor.js",
+      "sha256": "13050c5e047556326a2a17bc991dcf1e0f58b20409e0476486a6fd0ed6c577f6"
+    },
+    {
+      "file": "builder-util-runtime/out/CancellationToken.js",
+      "sha256": "054512fdee2fe810ef46d5ce7fdc2c39d3582ee8c3d463a4ee6c954bca8ec7d5"
+    },
+    {
+      "file": "builder-util-runtime/out/ProgressCallbackTransform.js",
+      "sha256": "35503895f7e7dd4329b94dd69eb48674ac55d9d6646d0ea42eada5378d433d32"
+    }
+  ]
+}

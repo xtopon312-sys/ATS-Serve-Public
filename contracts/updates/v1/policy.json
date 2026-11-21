@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "platform": "windows",
+  "arch": "x64",
+  "defaultChannel": "stable",
+  "knownChannels": ["stable", "beta"],
+  "enabledChannels": ["stable"],
+  "channelFiles": {"stable": "latest.yml", "beta": "beta.yml"},
+  "nativeChannels": {"stable": "latest", "beta": "beta"},
+  "feedBasePath": "/v1/updates/windows/x64/",
+  "artifactBasePath": "/v1/artifacts/windows/x64/",
+  "releaseKeyPrefix": "releases/windows/x64/",
+  "channelKeyPrefix": "channels/windows/x64/",
+  "allowDowngrade": false,
+  "electronUpdaterVersion": "6.8.10",
+  "provider": {"type": "generic", "useMultipleRangeRequest": false},
+  "differentialTransport": {
+    "mode": "single-range",
+    "blockmapRequired": true,
+    "multiRange": {"supported": false, "requiredForGate2": false, "enablement": "explicit-end-to-end-gate"},
+    "http": {
+      "noRangeStatus": 200,
+      "singleRangeStatus": 206,
+      "invalidRangeStatus": 416,
+      "multiRangeStatus": 200,
+      "rejectedMultiRangeStatus": 416,
+      "maxRanges": 16,
+      "maxRangeHeaderBytes": 1024,
+      "unknownRangeUnitStatus": 200,
+      "ifRangeMismatchStatus": 200,
+      "ifRangeDate": "exact-match-with-proven-strong-last-modified",
+      "ifRangeEvaluation": "before-range",
+      "headRange": "ignore",
+      "unsatisfiedContentRange": "bytes */<size>"
+    },
+    "fallback": {
+      "mode": "native-full-download",
+      "sha512Required": true,
+      "metadataValidationRequired": true,
+      "artifactMatchRequired": true,
+      "finalIntegrityFailure": "fail-no-install"
+    }
+  },
+  "autoDownload": false,
+  "autoInstallOnAppQuit": false,
+  "disableWebInstaller": true,
+  "disableDifferentialDownload": true,
+  "requestHeaders": {"x-user-staging-id": "ats-public-v1"},
+  "metadataCacheControl": "no-store",
+  "artifactCacheControl": "public, max-age=31536000, immutable"
+}
